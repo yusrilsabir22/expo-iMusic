@@ -1,21 +1,40 @@
-import { StatusBar } from 'expo-status-bar';
+import 'reflect-metadata';
+import 'react-native-gesture-handler'
+
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import createSagaMiddleware from 'redux-saga';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import reducers from './src/redux/reducers';
+import rootSaga from './src/redux';
+import {StatusBar} from 'expo-status-bar'
+import { DatabaseConnectionProvider } from './src/database/connection';
+import { SocketIOConnProvider } from './src/config/socket-conn';
+import MyApp from './src';
+import { enableScreens } from 'react-native-screens';
 
-export default function App() {
+
+// declare const global: {HermesInternal: null | {}};
+const sagaMiddleware = createSagaMiddleware();
+const store = createStore(reducers, applyMiddleware(sagaMiddleware));
+
+enableScreens();
+const App = () => {
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <DatabaseConnectionProvider>
+        <SocketIOConnProvider>
+          {/* <TrackPlayerProvider> */}
+            <StatusBar hidden />
+            <MyApp/>
+          {/* </TrackPlayerProvider> */}
+        </SocketIOConnProvider>
+      </DatabaseConnectionProvider>
+    </Provider>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+sagaMiddleware.run(rootSaga)
+
+export default App;
